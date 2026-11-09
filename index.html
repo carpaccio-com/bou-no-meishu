@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>棒の盟主</title>
+<meta name="description" content="白黒の棒人間で小国を育て、島の国々を従えていく征服クリッカー。タップで徴兵し、兵種と階級を整え、外交と戦争で天下統一を目指す。">
+<meta name="theme-color" content="#121212">
+<!-- SNSで共有したときの表示（OGP）。公開したURLに合わせて、og:url と og:image を書きかえる -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="棒の盟主">
+<meta property="og:description" content="白黒の棒人間で小国を育て、島の国々を従えていく征服クリッカー。タップで徴兵し、兵種と階級を整え、外交と戦争で天下統一を目指す。">
+<meta property="og:url" content="https://carpaccio-com.github.io/bou-no-meishu/">
+<meta property="og:image" content="https://carpaccio-com.github.io/bou-no-meishu/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div class="tip" id="tip" hidden></div>
+  <header class="top">
+    <div class="brand"><h1>棒の盟主</h1><span class="sub">STICK SOVEREIGN</span></div>
+    <div class="hbar"><div class="day" id="day">第1日</div><button class="b" id="helpBtn" type="button" aria-haspopup="dialog">？ 遊び方</button></div>
+  </header>
+
+  <p class="goal" id="goalTxt"></p>
+  <section class="res" aria-label="国の資源">
+    <div class="cell" data-tip="持っている兵の合計。戦場をタップするか兵舎で増える。下は兵舎で増える速さ。"><span class="lb">兵士</span><span class="v" id="v-sol">0</span><span class="rt" id="r-sol"></span></div>
+    <div class="cell" id="c-food" data-tip="兵を作るときに使う。農場と「耕す」、属国の朝貢で増える。下は1秒あたりの増減（兵舎で使う分を引いた数）。"><span class="lb">食料</span><span class="v" id="v-food">0</span><span class="rt" id="r-food"></span></div>
+    <div class="cell" data-tip="施設・研究・訓練・傭兵・和平に使う。市場、協定、属国の朝貢、賠償金、交易で増える。"><span class="lb">金</span><span class="v" id="v-gold">0</span><span class="rt" id="r-gold"></span></div>
+    <div class="cell" id="c-wall" data-tip="防衛戦で敵に削られる耐久。0になると金と食料を奪われる。城壁強化と研究で上がり、戦いのない間に回復する。"><span class="lb">城壁</span><span class="v" id="v-wall">0</span><span class="rt" id="r-wall"></span></div>
+    <div class="cell inv" data-tip="兵の強さの合計（兵種の戦力×階級の倍率×研究）。敵の「兵力」と比べる目安。"><span class="lb">戦力</span><span class="v" id="v-pow">0</span><span class="rt" id="r-pow"></span></div>
+  </section>
+
+  <main class="grid">
+    <div class="left">
+    <div class="tbar" id="tbar" role="group" aria-label="タップで作る兵種"></div>
+    <div class="stage" id="stage" tabindex="0" role="button" aria-label="タップで選んだ兵種を徴兵">
+      <canvas id="cv"></canvas>
+      <div class="hud" id="hud"><span class="lb" id="hpTxt">城壁</span><div class="hpbar"><i id="hpFill"></i></div></div>
+      <div class="tr">
+        <div class="raidbox" id="raidBox" hidden></div>
+        <div class="hud ehud" id="ehud" hidden><span class="lb" id="ehpTxt">敵の野営地</span><div class="hpbar"><i id="ehpFill"></i></div></div>
+        <button class="b retreat" id="retreatBtn" hidden>撤退する</button>
+      </div>
+      <div class="warchip" id="warChip" hidden><div>宣戦中 <span id="warChipTxt"></span></div><button class="b solid" id="warChipGo">迎え撃つ</button></div>
+      <div class="hint" id="hint"><span id="hintT">タップで徴兵</span><small>上のボタンで兵種を選べる</small></div>
+      <div class="bsel" id="bsel" hidden></div>
+      <div id="banner"></div>
+    </div>
+    <div class="ctl" id="ctl">
+      <div class="cg"><button class="b" id="fullBtn" type="button">全画面</button></div>
+      <span class="note" id="ctlNote">戦いが始まると、ここで速さと指示を選べる</span>
+      <div class="cg" id="spdG"><span class="lbl">速さ</span><div class="seg seg3" id="spdSeg"></div></div>
+      <div class="cg" id="ordG"><span class="lbl">指示</span><div class="seg seg3" id="ordSeg"></div></div>
+      <div class="cg" id="btlG"><button class="b" id="bowBtn" type="button">弓は後ろから</button><button class="b solid" id="kingBtn" type="button">盟主が出陣<small id="kingS"></small></button></div>
+    </div>
+    </div>
+
+    <aside class="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="home">内政</button>
+        <button role="tab" aria-selected="false" data-tab="army">軍団</button>
+        <button role="tab" aria-selected="false" data-tab="dip">外交</button>
+        <button role="tab" aria-selected="false" data-tab="log">記録<span class="badge" id="logBadge"></span></button>
+      </nav>
+
+      <div class="pane" id="tab-home">
+        <button class="b farm" id="act-farm">耕す<small id="act-farm-s">食料 +20</small></button>
+        <h3>施設<span>自動で生産</span></h3>
+        <div id="builds"></div>
+        <h3>兵舎<span>兵種ごとに自動で徴兵</span></h3>
+        <div id="camps"></div>
+        <h3>改良<span>国力の底上げ</span></h3>
+        <div id="upgs"></div>
+        <h3>研究<span id="resNow">金と時間で進める</span></h3>
+        <div id="resList"></div>
+        <h3>傭兵<span>金で兵卒を雇う（食料はいらない）</span></h3>
+        <div class="seg seg5" id="mercSeg"></div>
+      </div>
+
+      <div class="pane" id="tab-army" hidden>
+        <h3>兵の内訳<span id="armyTot"></span></h3>
+        <div class="tblwrap"><table class="army" id="armyTbl"></table></div>
+        <p class="note" id="woundTxt"></p>
+        <h3>近衛兵<span>防衛戦だけで戦う精鋭</span></h3>
+        <p class="note" id="guardTxt"></p>
+        <p class="lbl">近衛兵を育てる（一人 金40・食料20・3秒。タップや兵舎では増えない）</p>
+        <div class="seg seg3" id="guardSeg"></div>
+        <div class="gq" id="guardQ" hidden><div class="gqt"><span id="gqTxt"></span><button class="b" type="button" id="gqCancel">やめる<small>払った分を返す</small></button></div><div class="gbar"><i id="gqFill"></i></div></div>
+        <h3>訓練<span>階級ごとに操作</span></h3>
+        <p class="lbl">操作する階級</p>
+        <div class="seg seg5" id="rankSeg"></div>
+        <p class="lbl">一度に動かす人数</p>
+        <div class="seg seg4" id="amtSeg"></div>
+        <div id="urows"></div>
+        <p class="note">戦闘中も訓練できる。兵は戦場の上の兵種ボタンで選んでからタップすると、その兵種で生まれる。「訓練」は金と食料を使って一つ上の階級へ上げる。階級が上がるほど一人あたりの戦力が上がる。</p>
+      </div>
+
+      <div class="pane" id="tab-dip" hidden>
+        <h3 id="conqTitle">征服<span id="conqTxt">0 / 36</span></h3>
+        <p class="note" id="traitTxt"></p>
+        <div class="fracrow" style="grid-template-columns:auto minmax(0,1fr)"><span class="lbl">属国の朝貢</span><div class="seg seg3" id="taxSeg"></div><span class="note">重いほど金と食料が多く入るが、属国の忠誠が下がり、反乱しやすくなる。</span></div>
+        <div class="conq" id="conq"></div>
+        <div class="mapbox"><canvas id="map" aria-label="世界地図。国を押して選ぶ。ドラッグで移動、拡大ボタンかホイールで拡大"></canvas><div class="mzoom"><button class="b" id="mzIn" type="button" aria-label="拡大">＋</button><button class="b" id="mzOut" type="button" aria-label="縮小">−</button><button class="b" id="mzAll" type="button">全体</button></div><div class="wait" id="mapWait">地図を描いています…</div></div>
+        <div class="legend"><span><i class="lg-home"></i>自国</span><span><i class="lg-free"></i>独立国</span><span><i class="lg-pact"></i>協定国</span><span><i class="lg-vas"></i>属国</span></div>
+        <div id="nationCard"></div>
+      </div>
+
+      <div class="pane" id="tab-log" hidden>
+        <h3>次の目標</h3>
+        <p class="goal2" id="goalTxt2"></p>
+        <h3>実績<span id="achCount"></span></h3>
+        <div class="ach" id="achList"></div>
+        <h3>統計</h3>
+        <dl class="stats" id="statList"></dl>
+        <h3>設定</h3>
+        <div class="setg">
+          <span class="lbl">言語 / Language</span><div class="seg" id="langSeg" style="grid-template-columns:1fr 1fr"><button class="b" type="button" data-lang="ja">日本語</button><button class="b" type="button" data-lang="en">English</button></div>
+          <span class="lbl">難しさ</span><div class="seg seg3" id="diffSeg"></div>
+          <span class="lbl">効果音</span><input type="range" class="vol" id="sfxRange" min="0" max="100" value="60">
+          <span class="lbl">音楽</span><input type="range" class="vol" id="bgmRange" min="0" max="100" value="35">
+          <span class="lbl">音</span><button class="b" id="muteBtn" type="button">音を消す</button>
+          <span class="lbl">裏の戦い</span><button class="b" id="autoBgBtn" type="button">映していない戦いは×4で進める</button>
+        </div>
+        <h3>セーブ<span>別の端末やブラウザへ持っていく</span></h3>
+        <div class="savebox">
+          <textarea id="saveTxt" rows="3" spellcheck="false" aria-label="セーブの文字列"></textarea>
+          <div class="seg" style="grid-template-columns:1fr 1fr 1fr"><button class="b" id="expBtn" type="button">書き出す</button><button class="b" id="cpyBtn" type="button">コピー</button><button class="b solid" id="impBtn" type="button">読み込む</button></div>
+          <p class="note" id="saveNote">「書き出す」で今のセーブが文字列になる。別の端末で貼りつけて「読み込む」と続きから遊べる。</p>
+        </div>
+        <h3>王朝<span id="genTxt"></span></h3>
+        <p class="note">島を2つ以上統一すると、王朝を次の代へ引き継げる。研究と実績はそのまま、ほかは最初の島からやり直し。代を重ねるごとに全兵の戦力 +10%。</p>
+        <button class="b" id="genBtn" type="button">王朝を次の代へ</button>
+        <h3>年代記<span id="logCount"></span></h3>
+        <div class="seg seg4" id="logSeg"></div>
+        <ul class="log" id="log"></ul>
+        <button class="b" id="resetBtn">最初からやり直す</button>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div id="warModal" hidden role="dialog" aria-modal="true" aria-labelledby="warTitle">
+  <div class="box">
+    <p class="eyebrow">DECLARATION OF WAR</p>
+    <h2 id="warTitle">宣戦布告</h2>
+    <p id="warText"></p>
+    <dl class="n-stats"><div><dt>敵兵力</dt><dd id="warE"></dd></div><div><dt>主力</dt><dd id="warMain"></dd></div><div><dt>守る兵の戦力</dt><dd id="warP"></dd></div></dl>
+    <div class="fracrow"><label class="lbl" for="defRange">防衛に出す兵</label><input type="range" class="vol" id="defRange" min="1" max="100" step="1" value="100"><span class="pct" id="defPct">100%</span><span class="note" id="defNote"></span></div>
+    <div class="wbtns">
+      <button class="b solid" id="warGo">いま迎え撃つ<small>城壁の前で防衛戦</small></button>
+      <button class="b" id="warHold">開戦を保留する<small id="warHoldS"></small></button>
+      <button class="b" id="warPeace">和平金を払って退かせる<small id="warPeaceS"></small></button>
+    </div>
+    <p class="note" id="warNote"></p>
+  </div>
+</div>
+<div id="helpModal" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="box">
+    <p class="eyebrow">HOW TO PLAY</p>
+    <h2 id="helpTitle">遊び方</h2>
+    <div class="howto">
+          <p><b>目的</b>　島の国々をすべて属国にすると島を統一でき、兵・金・施設を連れて次の島へ渡れる。属国の朝貢は島を離れても入り続ける。</p>
+          <p><b>兵士</b>　戦場をタップすると門から新兵が一人出てくる。兵は作るときだけ食料を使い、その後は食料を減らさない。</p>
+          <p><b>兵種</b>　戦場の上で兵種を選んでタップすると、その兵が生まれる。歩兵は無料、ほかは一人ごとに食料を使う。槍兵は騎兵に、騎兵は弓兵に、弓兵は歩兵と槍兵に強い。盾兵は打たれ強い。</p>
+          <p><b>城壁と野営地</b>　戦場の左上に味方の拠点、右上に敵の拠点の耐久が出る。敵の拠点の耐久を0にすれば、敵兵が残っていてもその場で勝ち。味方の拠点を0にされると負け（防衛戦なら金と食料を奪われる）。攻めてくる前に宣戦布告があり、開戦を保留したり和平金で退かせたりできる。</p>
+          <p><b>外交</b>　地図で国を選び、交易・協定・侵攻を行う。勝てば属国となり、朝貢（金と食料）が入る。</p>
+        </div>
+    <h3>キーボード（パソコン）</h3>
+    <dl class="keys"><dt>スペース</dt><dd>戦場にカーソルがあるとき徴兵</dd><dt>1〜5</dt><dd>徴兵する兵種を選ぶ（歩・槍・盾・弓・騎）</dd><dt>Esc</dt><dd>この画面を閉じる</dd></dl>
+    <div class="wbtns" style="display:grid;gap:6px"><button class="b solid" id="tutBtn" type="button">チュートリアルを最初から見る</button><button class="b" id="helpClose" type="button">閉じる</button></div>
+  </div>
+</div>
+<div id="coach" hidden><div class="ring" id="cRing"></div><div class="bub" id="cBub" role="dialog" aria-live="polite"><p class="st" id="cStep"></p><h4 id="cTitle"></h4><p class="tx" id="cText"></p><div class="row2"><button class="b" id="cSkip" type="button">スキップ</button><span class="wait" id="cWait"></span><button class="b solid" id="cNext" type="button">次へ</button></div></div></div>
+<div id="langModal" hidden role="dialog" aria-modal="true" aria-labelledby="langTitle">
+  <div class="box">
+    <h2 id="langTitle">棒の盟主</h2>
+    <p class="en">STICK SOVEREIGN</p>
+    <p>言語を選んでください<br>Choose your language</p>
+    <div class="lb"><button class="b solid" type="button" data-lang="ja">日本語</button><button class="b solid" type="button" data-lang="en">English</button></div>
+    <p class="note">あとから「記録」タブの設定で変えられます。<br>You can change it later in Settings on the Records tab.</p>
+  </div>
+</div>
+<div id="evModal" hidden role="dialog" aria-modal="true" aria-labelledby="evTitle">
+  <div class="box">
+    <p class="eyebrow">ENVOY</p>
+    <h2 id="evTitle">使者</h2>
+    <p id="evText"></p>
+    <div class="wbtns"><button class="b solid" id="evYes" type="button">受ける</button><button class="b" id="evNo" type="button">断る</button></div>
+  </div>
+</div>
+<div id="end" hidden>
+  <div class="box">
+    <h2 id="endTitle">島を統一</h2>
+    <p id="endTxt"></p>
+    <button class="b solid" id="againBtn" style="padding:12px">新しい島へ渡る</button>
+  </div>
+</div>
+<script src="game.js"></script>
+<script>
+// オフラインでも遊べるようにする（https で公開したときだけ動く）
+if('serviceWorker' in navigator && location.protocol==='https:'){navigator.serviceWorker.register('sw.js');}
+</script>
+</body>
+</html>

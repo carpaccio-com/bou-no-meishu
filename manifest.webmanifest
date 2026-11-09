@@ -1,0 +1,25 @@
+{
+  "name": "棒の盟主",
+  "short_name": "棒の盟主",
+  "description": "白黒の棒人間で小国を育て、島の国々を従えていく征服クリッカー。タップで徴兵し、兵種と階級を整え、外交と戦争で天下統一を目指す。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fafaf7",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
